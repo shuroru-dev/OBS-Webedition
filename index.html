@@ -7,41 +7,28 @@
     <link rel="stylesheet" href="CSS/style.css">
 </head>
 <body>
-    <div id="obs-studio">
-        <section class="viewport">
+    <div id="obs-app">
+        <main class="preview-area">
             <canvas id="mainCanvas"></canvas>
-        </section>
+        </main>
 
-        <footer class="dock">
-            <div class="dock-panel" id="source-panel">
-                <div class="panel-header">ソース</div>
+        <footer class="controls-dock">
+            <div class="panel">
+                <h3>ソース</h3>
                 <div id="sourceList" class="list-box"></div>
-                <div class="panel-buttons">
-                    <button id="addBtn" title="ソースを追加">+</button>
-                    <button id="delBtn" title="ソースを削除">-</button>
-                    
+                <div class="btn-group">
+                    <button id="addBtn">+</button>
                     <div id="addMenu" class="hidden">
-                        <button onclick="addScreen()">🖥️ 画面キャプチャ</button>
-                        <button onclick="addCamera()">📷 映像キャプチャデバイス</button>
-                        <button onclick="alert('マイクも許可が必要だみょん！')">🎤 音声入力キャプチャ</button>
+                        <button onclick="addScreen()">🖥️ 画面共有</button>
+                        <button onclick="addCamera()">📷 カメラ</button>
+                        <button onclick="addMic()">🎤 マイク（許可を求める）</button>
                     </div>
                 </div>
             </div>
 
-            <div class="dock-panel">
-                <div class="panel-header">音声ミキサー</div>
-                <div class="list-box">
-                    <div style="padding: 10px; font-size: 10px; color: #888;">
-                        Desktop Audio [||||||||||----]
-                    </div>
-                </div>
-            </div>
-
-            <div class="dock-panel">
-                <div class="panel-header">コントロール</div>
-                <div style="display: grid; grid-template-columns: 1fr; gap: 4px; padding: 5px;">
-                    <button style="background: #333;">配信開始</button>
-                    <button style="background: #333;">録画開始</button>
+            <div class="panel">
+                <h3>コントロール</h3>
+                <div class="control-grid">
                     <button id="openSettings">設定</button>
                     <button onclick="location.reload()">再起動</button>
                 </div>
@@ -49,29 +36,17 @@
         </footer>
 
         <div id="settingsModal" class="modal hidden">
-            <div class="modal-window">
+            <div class="modal-content">
                 <div class="modal-header">
                     <span>設定</span>
-                    <button id="closeSettings" class="close-btn">×</button>
+                    <button id="closeSettings">×</button>
                 </div>
-                <div style="padding: 20px; font-size: 12px;">
-                    <div style="margin-bottom: 15px;">
-                        <label>基本解像度:</label><br>
-                        <select style="width: 100%; background: #000; color: #fff; border: 1px solid #555;">
-                            <option>1280x720</option>
-                            <option>1920x1080</option>
-                        </select>
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <label>サーバー:</label><br>
-                        <input type="text" value="webobs.pages.dev" readonly style="width: 90%; background: #000; color: #888; border: 1px solid #555; padding: 4px;">
-                    </div>
-                    <p style="color: #4a90e2; text-align: center;">しゅろるプロ専用ビルド🌸</p>
+                <div class="modal-body">
+                    <p>URL: webobs.pages.dev</p>
                 </div>
             </div>
         </div>
     </div>
-
     <script src="Javascript/script.js"></script>
 </body>
 </html>

@@ -1,122 +1,52 @@
-/* 全体設定：スクロールを消してOBSブラックに */
-body {
-    background-color: #1a1a1a;
-    color: #e0e0e0;
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
+body, html {
+    margin: 0; padding: 0; height: 100%;
+    background-color: #000; color: #fff;
+    font-family: sans-serif; overflow: hidden;
 }
 
-/* プレビューエリア：ここが画面を独占しないように調整！ */
-.viewport {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #0f0f0f;
-    padding: 20px;
-    box-sizing: border-box;
+#obs-app {
+    display: flex; flex-direction: column; height: 100vh;
+}
+
+/* プレビューエリア：Canvasを中央に、でも独占させない */
+.preview-area {
+    flex: 1; display: flex; justify-content: center; align-items: center;
+    background: #111; padding: 10px; min-height: 0;
 }
 
 #mainCanvas {
-    background-color: #000;
-    border: 1px solid #3a3a3a;
-    box-shadow: 0 0 30px rgba(0,0,0,0.8);
-    max-width: 100%;
-    max-height: 100%;
-    /* 16:9を維持するみょん */
-    aspect-ratio: 16 / 9;
+    max-width: 100%; max-height: 100%;
+    aspect-ratio: 16 / 9; background: #000;
+    border: 2px solid #333; z-index: 1;
 }
 
-/* 下部ドック：操作パネル */
-.dock {
-    height: 220px;
-    background-color: #262626;
-    border-top: 2px solid #3a3a3a;
-    display: flex;
-    gap: 5px;
-    padding: 5px;
+/* 操作ドック：Canvasの下に絶対配置するみょん */
+.controls-dock {
+    height: 180px; background: #222;
+    border-top: 2px solid #444; display: flex;
+    padding: 10px; gap: 10px; z-index: 10;
 }
 
-.dock-panel {
-    flex: 1;
-    background-color: #262626;
-    border: 1px solid #3a3a3a;
-    display: flex;
-    flex-direction: column;
-    position: relative;
+.panel {
+    flex: 1; border: 1px solid #444; display: flex; flex-direction: column;
 }
 
-.panel-header {
-    background-color: #3a3a3a;
-    font-size: 11px;
-    text-align: center;
-    padding: 3px;
-    color: #999;
-    text-transform: uppercase;
-}
+h3 { font-size: 12px; margin: 5px; color: #aaa; text-align: center; }
 
-.list-box {
-    flex: 1;
-    background-color: #000;
-    margin: 5px;
-    border: 1px solid #444;
-    overflow-y: auto;
-}
+.list-box { flex: 1; background: #000; margin: 5px; overflow-y: auto; }
 
-.panel-buttons {
-    padding: 5px;
-    display: flex;
-    gap: 5px;
-}
+.btn-group { padding: 5px; position: relative; }
 
-button {
-    background-color: #444;
-    color: white;
-    border: 1px solid #555;
-    padding: 4px 12px;
-    cursor: pointer;
-    font-size: 12px;
-}
-
-button:hover {
-    background-color: #4a90e2;
-}
-
-/* メニューとモーダル */
 .hidden { display: none !important; }
 
 #addMenu {
-    position: absolute;
-    bottom: 40px;
-    left: 5px;
-    background: #333;
-    border: 1px solid #555;
-    z-index: 100;
+    position: absolute; bottom: 40px; left: 0;
+    background: #333; border: 1px solid #555; display: flex; flex-direction: column;
 }
 
-#addMenu button {
-    display: block;
-    width: 100%;
-    text-align: left;
-    border: none;
-    padding: 8px 15px;
-}
+#addMenu button { padding: 8px; text-align: left; background: #444; border: none; color: white; cursor: pointer; }
 
-.modal {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8);
-    display: flex; justify-content: center; align-items: center;
-    z-index: 1000;
-}
-
-.modal-window {
-    background: #262626;
-    border: 1px solid #4a90e2;
-    width: 320px;
-    padding: 0;
-}
+/* モーダル */
+.modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; }
+.modal-content { background: #222; border: 1px solid #4a90e2; width: 300px; }
+.modal-header { background: #333; padding: 5px; display: flex; justify-content: space-between; }
