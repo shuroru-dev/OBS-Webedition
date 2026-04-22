@@ -2,21 +2,21 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Web-OBS Pro | Shuroru Edition</title>
+    <title>Web-OBS Pro | Shuroru Ultra</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="obs-container">
-        <div class="video-layer">
+        <div class="video-preview">
             <canvas id="mainCanvas"></canvas>
         </div>
 
-        <div class="ui-layer">
-            <div class="panel">
+        <div class="dock-area">
+            <div class="dock-panel">
                 <div class="header">ソース</div>
-                <div id="sourceList" class="list-container"></div>
-                <div class="controls">
-                    <button id="addBtn" class="main-btn">＋ ソースを追加</button>
+                <div id="sourceList" class="list-content"></div>
+                <div class="panel-btns">
+                    <button id="addBtn">＋</button>
                     <div id="addMenu" class="popup-menu hidden">
                         <button onclick="addScreen()">🖥️ 画面共有</button>
                         <button onclick="addCamera()">📷 カメラ</button>
@@ -24,37 +24,74 @@
                 </div>
             </div>
 
-            <div class="panel">
+            <div class="dock-panel">
+                <div class="header">音声ミキサー</div>
+                <div class="mixer-content">
+                    <div class="v-meter"><div class="v-bar"></div></div>
+                    <span style="font-size: 10px;">デスクトップ音声</span>
+                </div>
+            </div>
+
+            <div class="dock-panel controls-panel">
                 <div class="header">コントロール</div>
-                <div class="btn-grid">
-                    <button id="recordBtn" class="record-btn">🔴 録画開始</button>
+                <div class="control-btns">
+                    <button id="recordBtn">録画開始</button>
                     <button id="openSettings">設定</button>
-                    <button onclick="location.reload()">再起動</button>
+                    <button onclick="location.reload()">終了</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="settingsModal" class="modal hidden">
-        <div class="modal-box">
-            <div class="modal-top">
-                <span>詳細設定</span>
-                <button id="closeSettings">×</button>
+        <div class="modal-box ultra">
+            <div class="modal-sidebar">
+                <div class="tab-btn active" onclick="showTab('stream')">📡 配信</div>
+                <div class="tab-btn" onclick="showTab('output')">📤 出力</div>
+                <div class="tab-btn" onclick="showTab('video')">🖼️ 映像</div>
             </div>
-            <div class="modal-body">
-                <div class="setting-item">
-                    <label>🔑 ストリームキー:</label>
-                    <input type="password" id="streamKey" placeholder="キーを入力...">
+            <div class="modal-main">
+                <div class="modal-top">
+                    <span id="tabTitle">設定 - 配信</span>
+                    <button id="closeSettings">×</button>
                 </div>
-                <div class="setting-item">
-                    <label>🎞️ 配信/録画 FPS:</label>
-                    <select id="fpsSelect">
-                        <option value="30">30 FPS</option>
-                        <option value="60" selected>60 FPS</option>
-                        <option value="120">120 FPS</option>
-                    </select>
+                
+                <div id="tab-stream" class="tab-content">
+                    <div class="input-group">
+                        <label>サーバー</label>
+                        <input type="text" id="serverUrl" value="rtmp://a.rtmp.youtube.com/live2">
+                    </div>
+                    <div class="input-group">
+                        <label>ストリームキー</label>
+                        <input type="password" id="streamKey" placeholder="キーを入力...">
+                    </div>
                 </div>
-                <p style="color:#888; font-size:11px; margin-top:10px;">※メモリに録画し、終了後に保存されます🌸</p>
+
+                <div id="tab-output" class="tab-content hidden">
+                    <div class="input-group">
+                        <label>映像ビットレート (Kbps)</label>
+                        <input type="number" id="bitrate" value="12000">
+                    </div>
+                    <div class="input-group">
+                        <label>エンコーダ</label>
+                        <select id="encoder"><option>ソフトウェア (x264)</option><option>ハードウェア (NVENC)</option></select>
+                    </div>
+                </div>
+
+                <div id="tab-video" class="tab-content hidden">
+                    <div class="input-group">
+                        <label>基本 (キャンパス) 解像度</label>
+                        <select id="res"><option>1920x1080</option><option>1280x720</option></select>
+                    </div>
+                    <div class="input-group">
+                        <label>FPS 共通値</label>
+                        <select id="fpsSelect"><option value="30">30</option><option value="60" selected>60</option></select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button id="saveSettings" class="apply-btn">適用</button>
+                </div>
             </div>
         </div>
     </div>
