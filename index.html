@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Web-OBS Pro - Shuroru Edition</title>
+    <link rel="stylesheet" href="./CSS/style.css">
+</head>
+<body>
+    <div id="obs-layout">
+        <div class="canvas-area">
+            <canvas id="obsCanvas" width="1280" height="720"></canvas>
+            <div id="canvas-overlay"></div>
+        </div>
+
+        <div class="dock-container">
+            <div class="dock-item" id="dock-sources">
+                <h3>ソース</h3>
+                <div class="list-box" id="sourceList"></div>
+                <div class="dock-controls">
+                    <button id="addScreen">+</button>
+                    <button id="addImage">🖼️</button>
+                    <button id="clearSources">🗑️</button>
+                </div>
+            </div>
+
+            <div class="dock-item" id="dock-mixer">
+                <h3>音声ミキサー</h3>
+                <div class="mixer-unit">
+                    <span class="label">Desktop Audio</span>
+                    <div class="volume-meter"><div class="meter-fill"></div></div>
+                </div>
+            </div>
+
+            <div class="dock-item" id="dock-controls">
+                <h3>コントロール</h3>
+                <button class="btn-main" id="startStream">配信開始</button>
+                <button class="btn-main" id="startRecord">録画開始</button>
+                <button class="btn-main" id="toggleSettings">設定</button>
+            </div>
+        </div>
+
+        <div id="settingsPanel" class="hidden">
+            <div class="settings-content">
+                <h2>配信設定</h2>
+                <label>ストリームURL:</label> <input type="text" id="rtmpUrl" placeholder="rtmp://...">
+                <label>ストリームキー:</label> <input type="password" id="streamKey">
+                <button id="saveSettings">適用</button>
+            </div>
+        </div>
+    </div>
+    <script src="./Javascript/script.js"></script>
+</body>
+</html>
