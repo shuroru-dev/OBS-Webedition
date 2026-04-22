@@ -5,47 +5,50 @@ canvas.width = 1280; canvas.height = 720;
 let sources = [];
 let addMenu = document.getElementById('addMenu');
 
-// マイク許可を求める魔法だみょん！
-async function addMic() {
+// ★マイク許可を強制的に呼び出すみょん！
+async function askMic() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        alert("マイクが許可されたみょん！音声ミキサーが動くようになるみょん🌸");
-        // ここに音声を処理するコードを繋げられるみょん
+        alert("マイク許可成功だみょん！🎤✨");
+        addMenu.classList.add('hidden');
     } catch (err) {
-        alert("マイクの許可が拒否されたみょん...設定から許可してね！");
+        alert("マイクが拒否されちゃったみょん...ブラウザの設定（URL横の鍵マーク）から許可してね！");
     }
 }
 
-// 他のカメラ、画面共有、描画ループは前回のままでOKだけど、
-// IDの整合性を合わせて再実装だみょん！
-
-document.getElementById('addBtn').onclick = () => addMenu.classList.toggle('hidden');
-
+// ソース追加（画面・カメラ）
 async function addScreen() {
     const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-    addSource(stream, '画面');
+    pushSource(stream, "画面共有");
 }
 
 async function addCamera() {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    addSource(stream, 'カメラ');
+    pushSource(stream, "カメラ");
 }
 
-function addSource(stream, name) {
-    const video = document.createElement('video');
-    video.srcObject = stream; video.play();
-    sources.push({ element: video, x: 50, y: 50, w: 400, h: 225, name: name });
+function pushSource(stream, name) {
+    const v = document.createElement('video');
+    v.srcObject = stream; v.play();
+    sources.push({ el: v, x: 50, y: 50, w: 400, h: 225, name: name });
     addMenu.classList.add('hidden');
 }
 
-function loop() {
+// 描画ループ
+function draw() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    sources.forEach(s => ctx.drawImage(s.element, s.x, s.y, s.w, s.h));
-    requestAnimationFrame(loop);
+    sources.forEach(s => ctx.drawImage(s.el, s.x, s.y, s.w, s.h));
+    requestAnimationFrame(draw);
 }
-loop();
+draw();
 
-// 設定の開閉
+// UI操作
+document.getElementById('addBtn').onclick = (e) => {
+    e.stopPropagation();
+    addMenu.classList.toggle('hidden');
+};
+window.onclick = () => addMenu.classList.add('hidden');
+
 document.getElementById('openSettings').onclick = () => document.getElementById('settingsModal').classList.remove('hidden');
 document.getElementById('closeSettings').onclick = () => document.getElementById('settingsModal').classList.add('hidden');

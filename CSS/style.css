@@ -1,52 +1,24 @@
-body, html {
-    margin: 0; padding: 0; height: 100%;
-    background-color: #000; color: #fff;
-    font-family: sans-serif; overflow: hidden;
-}
+body, html { margin: 0; padding: 0; height: 100%; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
 
-#obs-app {
-    display: flex; flex-direction: column; height: 100vh;
-}
+#obs-container { display: flex; flex-direction: column; height: 100vh; }
 
-/* プレビューエリア：Canvasを中央に、でも独占させない */
-.preview-area {
-    flex: 1; display: flex; justify-content: center; align-items: center;
-    background: #111; padding: 10px; min-height: 0;
-}
+/* 映像：奥に配置 */
+.video-layer { flex: 1; display: flex; justify-content: center; align-items: center; background: #0a0a0a; min-height: 0; }
+#mainCanvas { max-width: 95%; max-height: 95%; aspect-ratio: 16/9; background: #000; border: 2px solid #333; }
 
-#mainCanvas {
-    max-width: 100%; max-height: 100%;
-    aspect-ratio: 16 / 9; background: #000;
-    border: 2px solid #333; z-index: 1;
-}
+/* UI：手前に配置してボタンを見えるようにする！ */
+.ui-layer { height: 200px; background: #1c1c1c; border-top: 3px solid #333; display: flex; padding: 10px; gap: 10px; position: relative; z-index: 100; }
 
-/* 操作ドック：Canvasの下に絶対配置するみょん */
-.controls-dock {
-    height: 180px; background: #222;
-    border-top: 2px solid #444; display: flex;
-    padding: 10px; gap: 10px; z-index: 10;
-}
+.panel { flex: 1; background: #252525; border: 1px solid #444; display: flex; flex-direction: column; }
+.header { background: #333; font-size: 11px; text-align: center; padding: 4px; color: #aaa; }
+.list-container { flex: 1; background: #000; margin: 5px; overflow-y: auto; }
+.controls { padding: 5px; position: relative; }
 
-.panel {
-    flex: 1; border: 1px solid #444; display: flex; flex-direction: column;
-}
-
-h3 { font-size: 12px; margin: 5px; color: #aaa; text-align: center; }
-
-.list-box { flex: 1; background: #000; margin: 5px; overflow-y: auto; }
-
-.btn-group { padding: 5px; position: relative; }
+.main-btn { width: 30px; height: 30px; background: #444; color: #fff; border: none; cursor: pointer; }
+.popup-menu { position: absolute; bottom: 40px; left: 5px; background: #333; border: 1px solid #555; display: flex; flex-direction: column; z-index: 200; }
+.popup-menu button { padding: 10px; background: #444; border: none; color: #fff; text-align: left; border-bottom: 1px solid #555; }
 
 .hidden { display: none !important; }
-
-#addMenu {
-    position: absolute; bottom: 40px; left: 0;
-    background: #333; border: 1px solid #555; display: flex; flex-direction: column;
-}
-
-#addMenu button { padding: 8px; text-align: left; background: #444; border: none; color: white; cursor: pointer; }
-
-/* モーダル */
-.modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; }
-.modal-content { background: #222; border: 1px solid #4a90e2; width: 300px; }
-.modal-header { background: #333; padding: 5px; display: flex; justify-content: space-between; }
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 300; display: flex; align-items: center; justify-content: center; }
+.modal-box { background: #252525; border: 1px solid #4a90e2; width: 280px; }
+.modal-top { background: #333; padding: 5px 10px; display: flex; justify-content: space-between; }
