@@ -1,108 +1,116 @@
-const canvas = document.getElementById('obsCanvas');
+const canvas = document.getElementById('mainCanvas');
 const ctx = canvas.getContext('2d');
 const sourceList = document.getElementById('sourceList');
-const imageInput = document.getElementById('imageInput');
+const addMenu = document.getElementById('addMenu');
 
-let sources = []; // 画面上の全ソースを管理するみょん
+// 解像度を1280x720に固定！これで画面独占を防ぐみょん
+canvas.width = 1280;
+canvas.height = 720;
+
+let sources = [];
 let selectedSource = null;
 let isDragging = false;
 
-// 1. レンダリングループ（毎フレーム描画）
-function render() {
+// メイン描画ループ
+function draw() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Z-index順（配列の順）に描画だみょん
-    sources.forEach(src => {
-        if (src.type === 'video' || src.type === 'image') {
-            ctx.drawImage(src.element, src.x, src.y, src.w, src.h);
+    sources.forEach(s => {
+        if (s.element) {
+            ctx.drawImage(s.element, s.x, s.y, s.w, s.h);
         }
-        
-        // 選択中のソースに枠を出すみょん
-        if (src === selectedSource) {
-            ctx.strokeStyle = '#00ff00'; ctx.lineWidth = 4;
-            ctx.strokeRect(src.x, src.y, src.w, src.h);
+        if (s === selectedSource) {
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(s.x, s.y, s.w, s.h);
         }
     });
-    requestAnimationFrame(render);
+    requestAnimationFrame(draw);
 }
-render();
+draw();
 
-// 2. ソース追加機能 (パクり)
-document.getElementById('addSourceBtn').onclick = () => {
-    document.getElementById('sourceContextMenu').classList.toggle('hidden');
+// ソース追加メニューの制御
+document.getElementById('addBtn').onclick = (e) => {
+    e.stopPropagation();
+    addMenu.classList.toggle('hidden');
 };
 
-// 共通追加ロジック
-function addSourceToScene(type, element, name, w=640, h=360) {
-    const newSource = { type, element, x: 0, y: 0, w, h, name: `${name} ${sources.length+1}` };
-    sources.push(newSource);
-    selectedSource = newSource;
-    updateSourceList();
-    document.getElementById('sourceContextMenu').classList.add('hidden');
+window.onclick = () => addMenu.classList.add('hidden');
+
+async function addScreen() {
+    try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        createSource(stream, '画面共有');
+    } catch (e) { console.error(e); }
 }
 
-// 各種キャプチャ
-document.getElementById('addScreen').onclick = async () => {
-    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-    const video = document.createElement('video'); video.srcObject = stream; video.play();
-    addSourceToScene('video', video, '🖥️ 画面');
-};
-document.getElementById('addCamera').onclick = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    const video = document.createElement('video'); video.srcObject = stream; video.play();
-    addSourceToScene('video', video, '📷 カメラ', 320, 180); // ちょっと小さめに
-};
-document.getElementById('addMic').onclick = async () => {
-    await navigator.mediaDevices.getUserMedia({ audio: true });
-    addSourceToScene('audio', null, '🎤 マイク'); // 映像はないけどリストに
-};
+async function addCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        createSource(stream, 'カメラ');
+    } catch (e) { console.error(e); }
+}
 
-// 画像アップロードｗ
-document.getElementById('addImageBtn').onclick = () => imageInput.click();
-imageInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        const url = URL.createObjectURL(file);
-        const img = new Image(); img.src = url;
-        img.onload = () => addSourceToScene('image', img, '🖼️ 画像', img.width/2, img.height/2);
-    }
-});
+function createSource(stream, name) {
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    video.play();
+    // 初期位置とサイズ
+    const s = { 
+        element: video, 
+        x: 100, y: 100, 
+        w: 640, h: 360, 
+        name: name + " " + (sources.length + 1) 
+    };
+    sources.push(s);
+    selectedSource = s;
+    updateList();
+}
 
-// 3. マウス操作（ドラッグで位置調整だみょん！）
-canvas.onmousedown = (e) => {
+// マウス位置の計算（Canvas内の座標に変換するみょん）
+function getMousePos(e) {
     const rect = canvas.getBoundingClientRect();
-    const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+    };
+}
 
-    // ヒットテスト（後ろからチェック）
-    selectedSource = sources.slice().reverse().find(src => 
-        mx > src.x && mx < src.x + src.w && my > src.y && my < src.y + src.h
+canvas.onmousedown = (e) => {
+    const pos = getMousePos(e);
+    // 重なりを考えて逆順からチェック
+    selectedSource = [...sources].reverse().find(s => 
+        pos.x > s.x && pos.x < s.x + s.w && pos.y > s.y && pos.y < s.y + s.h
     );
-
     if (selectedSource) isDragging = true;
+    updateList();
 };
-canvas.onmousemove = (e) => {
+
+window.onmousemove = (e) => {
     if (isDragging && selectedSource) {
-        const rect = canvas.getBoundingClientRect();
-        selectedSource.x = (e.clientX - rect.left) * (canvas.width / rect.width) - (selectedSource.w / 2);
-        selectedSource.y = (e.clientY - rect.top) * (canvas.height / rect.height) - (selectedSource.h / 2);
+        const pos = getMousePos(e);
+        selectedSource.x = pos.x - (selectedSource.w / 2);
+        selectedSource.y = pos.y - (selectedSource.h / 2);
     }
 };
-canvas.onmouseup = () => isDragging = false;
 
-// 4. ソースリスト更新
-function updateSourceList() {
+window.onmouseup = () => isDragging = false;
+
+function updateList() {
     sourceList.innerHTML = '';
-    sources.forEach(src => {
-        const li = document.createElement('li');
-        li.textContent = src.name;
-        sourceList.appendChild(li);
+    sources.forEach(s => {
+        const item = document.createElement('div');
+        item.textContent = s.name;
+        item.style.padding = '5px';
+        item.style.fontSize = '12px';
+        if (s === selectedSource) item.style.background = '#4a90e2';
+        sourceList.appendChild(item);
     });
 }
 
-// 5. 設定モーダル管理（バツボタン対応みょん！）
-const settingsModal = document.getElementById('settingsModal');
-document.getElementById('toggleSettings').onclick = () => settingsModal.classList.remove('hidden');
-document.getElementById('closeSettings').onclick = () => settingsModal.classList.add('hidden');
-document.getElementById('saveSettings').onclick = () => settingsModal.classList.add('hidden');
+// 設定モーダル
+document.getElementById('openSettings').onclick = () => document.getElementById('settingsModal').classList.remove('hidden');
+document.getElementById('closeSettings').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
