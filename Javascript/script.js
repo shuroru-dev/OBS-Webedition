@@ -2,84 +2,86 @@ const canvas = document.getElementById('mainCanvas');
 const ctx = canvas.getContext('2d');
 const sourceList = document.getElementById('sourceList');
 const recordBtn = document.getElementById('recordBtn');
+const resSelect = document.getElementById('resSelect');
+const micMeter = document.getElementById('micMeter');
 
-let sources = [];
-let mediaRecorder;
-let recordedChunks = [];
+let sources = [], mediaRecorder, recordedChunks = [];
+let audioCtx, analyser;
 
-// タブ切り替えシステムだみょん！
-function showTab(tabName) {
+// 解像度更新
+function updateResolution() {
+    if (resSelect.value === 'portrait') {
+        canvas.width = 1080; canvas.height = 1920;
+    } else {
+        canvas.width = 1920; canvas.height = 1080;
+    }
+}
+resSelect.onchange = updateResolution;
+
+// タブ切り替え
+window.showTab = (name) => {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-    event.currentTarget.classList.add('active');
-    document.getElementById('tabTitle').textContent = `設定 - ${event.currentTarget.textContent}`;
+    document.getElementById(`tab-${name}`).classList.remove('hidden');
 }
 
-// UIイベント
+// UI制御
 document.getElementById('addBtn').onclick = () => document.getElementById('addMenu').classList.toggle('hidden');
 document.getElementById('openSettings').onclick = () => document.getElementById('settingsModal').classList.remove('hidden');
 document.getElementById('closeSettings').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
-document.getElementById('saveSettings').onclick = () => {
-    alert("設定を適用したみょん！🚀");
-    document.getElementById('settingsModal').classList.add('hidden');
-};
+document.getElementById('saveSettings').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
 
-async function addCamera() {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    registerSource(stream, "ウィンドゥキャプチャ 6");
+// マイク追加
+async function addMic() {
+    const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioCtx = new AudioContext();
+    analyser = audioCtx.createAnalyser();
+    audioCtx.createMediaStreamSource(s).connect(analyser);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    const update = () => {
+        analyser.getByteFrequencyData(data);
+        let avg = data.reduce((a, b) => a + b) / data.length;
+        micMeter.style.width = Math.min(avg * 2, 100) + "%";
+        requestAnimationFrame(update);
+    };
+    update();
+    const d = document.createElement('div'); d.textContent = "🎤 マイク補助";
+    sourceList.appendChild(d);
+}
+
+async function addCamera() { const s = await navigator.mediaDevices.getUserMedia({ video: true }); register(s, "📷 カメラ"); }
+async function addScreen() { const s = await navigator.mediaDevices.getDisplayMedia({ video: true }); register(s, "🖥️ 画面共有"); }
+
+function register(s, label) {
+    const v = document.createElement('video'); v.srcObject = s; v.play();
+    sources.push({ video: v, label });
+    const d = document.createElement('div'); d.textContent = label;
+    sourceList.appendChild(d);
     document.getElementById('addMenu').classList.add('hidden');
 }
 
-async function addScreen() {
-    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-    registerSource(stream, "画面キャプチャ");
-    document.getElementById('addMenu').classList.add('hidden');
-}
-
-function registerSource(stream, label) {
-    const video = document.createElement('video');
-    video.srcObject = stream; video.play();
-    sources.push({ video, label });
-    const div = document.createElement('div');
-    div.textContent = label;
-    div.className = "source-item"; // CSSで青くしてね！
-    sourceList.appendChild(div);
-}
-
-// 録画機能（設定値を反映！）
+// 録画（H.264/AVC1 優先）
 recordBtn.onclick = () => {
     if (!mediaRecorder || mediaRecorder.state === "inactive") {
         const fps = parseInt(document.getElementById('fpsSelect').value);
-        const bps = parseInt(document.getElementById('bitrate').value) * 1000;
-        const stream = canvas.captureStream(fps);
-        mediaRecorder = new MediaRecorder(stream, { 
-            mimeType: 'video/webm; codecs=vp9',
-            videoBitsPerSecond: bps 
-        });
+        const mime = 'video/webm; codecs=avc1.4d401e'; // H.264
+        const type = MediaRecorder.isTypeSupported(mime) ? mime : 'video/webm';
+        
+        mediaRecorder = new MediaRecorder(canvas.captureStream(fps), { mimeType: type });
         mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
         mediaRecorder.onstop = () => {
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `shuroru-obs-${fps}fps.webm`;
-            a.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(recordedChunks));
+            a.download = `shuroru_rec_${resSelect.value}.webm`; a.click();
         };
-        recordedChunks = [];
-        mediaRecorder.start();
-        recordBtn.textContent = "録画停止";
+        recordedChunks = []; mediaRecorder.start();
+        recordBtn.textContent = "録画停止"; recordBtn.classList.add('btn-active');
     } else {
-        mediaRecorder.stop();
-        recordBtn.textContent = "録画開始";
+        mediaRecorder.stop(); recordBtn.textContent = "録画開始"; recordBtn.classList.remove('btn-active');
     }
 };
 
 function render() {
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    sources.forEach(src => ctx.drawImage(src.video, 0, 0, canvas.width, canvas.height));
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    sources.forEach(s => ctx.drawImage(s.video, 0, 0, canvas.width, canvas.height));
     requestAnimationFrame(render);
 }
-
-canvas.width = 1920; canvas.height = 1080;
-render();
+updateResolution(); render();

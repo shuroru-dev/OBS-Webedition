@@ -1,28 +1,30 @@
 body { background: #1c1c21; color: #afafaf; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; }
 #obs-container { display: flex; flex-direction: column; height: 100vh; }
-.video-preview { flex: 1; background: #000; display: flex; justify-content: center; padding: 10px; }
-#mainCanvas { background: #000; border: 1px solid #333; max-height: 100%; aspect-ratio: 16/9; }
 
-.dock-area { height: 200px; background: #28282e; display: flex; padding: 5px; gap: 5px; border-top: 2px solid #111; }
+.video-preview { flex: 1; background: #000; display: flex; justify-content: center; align-items: center; padding: 10px; overflow: hidden; }
+#mainCanvas { background: #000; border: 1px solid #333; max-width: 100%; max-height: 100%; object-fit: contain; }
+
+.dock-area { height: 220px; background: #28282e; display: flex; padding: 5px; gap: 5px; border-top: 2px solid #111; }
 .dock-panel { flex: 1; background: #2d2d33; border: 1px solid #1c1c21; display: flex; flex-direction: column; min-width: 150px; }
 .header { background: #3c3c42; padding: 4px; font-size: 11px; text-align: center; color: #fff; }
-.list-content { flex: 1; background: #1c1c21; margin: 5px; }
+.list-content { flex: 1; background: #1c1c21; margin: 5px; padding: 5px; font-size: 13px; overflow-y: auto; }
 
-.control-btns { display: flex; flex-direction: column; gap: 5px; padding: 10px; }
-.control-btns button { background: #44444a; color: #fff; border: 1px solid #111; padding: 6px; border-radius: 3px; cursor: pointer; }
+.mixer-item { padding: 10px; border-bottom: 1px solid #333; }
+.meter-bg { width: 100%; height: 8px; background: #111; border-radius: 2px; }
+.meter-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #27ae60, #f1c40f, #e74c3c); transition: width 0.05s; }
 
-/* モーダル特化 */
-.modal-box.ultra { width: 700px; height: 450px; display: flex; padding: 0; overflow: hidden; }
-.modal-sidebar { width: 150px; background: #212126; border-right: 1px solid #111; display: flex; flex-direction: column; padding-top: 10px; }
-.tab-btn { padding: 12px; font-size: 13px; cursor: pointer; text-align: left; }
+.control-btns { display: flex; flex-direction: column; gap: 4px; padding: 10px; }
+.control-btns button { background: #44444a; color: #fff; border: 1px solid #111; padding: 8px; border-radius: 3px; cursor: pointer; font-size: 12px; }
+.btn-active { background: #3c78d8 !important; }
+
+.panel-footer { padding: 5px; background: #3c3c42; position: relative; }
+.popup-menu { position: absolute; bottom: 40px; left: 0; background: #3c3c42; border: 1px solid #111; min-width: 120px; }
+.popup-menu button { width: 100%; text-align: left; background: none; border: none; color: white; padding: 10px; cursor: pointer; }
+
+.modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 100; }
+.modal-box { width: 600px; height: 400px; display: flex; background: #2d2d33; border-radius: 5px; }
+.modal-sidebar { width: 140px; background: #212126; border-right: 1px solid #111; }
+.tab-btn { padding: 15px; cursor: pointer; font-size: 12px; }
 .tab-btn.active { background: #3c78d8; color: white; }
-.modal-main { flex: 1; display: flex; flex-direction: column; background: #2d2d33; }
-.modal-top { padding: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid #111; }
-.tab-content { padding: 20px; flex: 1; }
-.input-group { margin-bottom: 15px; }
-.input-group label { display: block; font-size: 12px; margin-bottom: 5px; }
-.input-group input, .input-group select { width: 100%; background: #1c1c21; color: white; border: 1px solid #444; padding: 8px; }
-.modal-footer { padding: 10px; text-align: right; border-top: 1px solid #111; }
-.apply-btn { background: #3c3c42; color: white; border: 1px solid #111; padding: 5px 20px; cursor: pointer; }
-
+.modal-main { flex: 1; display: flex; flex-direction: column; }
 .hidden { display: none !important; }
