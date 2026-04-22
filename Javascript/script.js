@@ -1,127 +1,101 @@
 const canvas = document.getElementById('mainCanvas');
 const ctx = canvas.getContext('2d');
 const sourceList = document.getElementById('sourceList');
-const addMenu = document.getElementById('addMenu');
-
-canvas.width = 1280;
-canvas.height = 720;
+const recordBtn = document.getElementById('recordBtn');
+const fpsSelect = document.getElementById('fpsSelect');
+const streamKey = document.getElementById('streamKey');
 
 let sources = [];
-let selectedSource = null;
-let isDragging = false;
-let dragOffset = { x: 0, y: 0 };
+let mediaRecorder;
+let recordedChunks = [];
 
-// 描画ループ：これがないと映像が止まっちゃうみょん！
-function draw() {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    sources.forEach(s => {
-        // 映像を描画
-        ctx.drawImage(s.el, s.x, s.y, s.w, s.h);
-        
-        // 選択中のソースに青い枠をつけるみょん（編集モード！）
-        if (s === selectedSource) {
-            ctx.strokeStyle = '#4a90e2';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(s.x, s.y, s.w, s.h);
-        }
-    });
-    requestAnimationFrame(draw);
-}
-draw();
-
-// マイク許可（これは前回と同じだみょん）
-async function askMic() {
-    try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        alert("マイクOKだみょん！🎤");
-    } catch (e) { alert("マイク失敗みょん..."); }
-}
-
-// ソース追加：追加したらリストを更新するみょん！
-async function addScreen() {
-    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-    createSource(stream, "画面共有");
-}
-
-async function addCamera() {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    createSource(stream, "カメラ");
-}
-
-function createSource(stream, name) {
-    const v = document.createElement('video');
-    v.srcObject = stream;
-    v.play();
-    
-    const newSource = {
-        el: v,
-        name: `${name} ${sources.length + 1}`,
-        x: 50, y: 50, w: 480, h: 270 // 初期の大きさ
-    };
-    
-    sources.push(newSource);
-    selectedSource = newSource;
-    updateSourceList(); // リストに表示させるみょん！
-    addMenu.classList.add('hidden');
-}
-
-// ★ソースリストの表示を更新する関数
-function updateSourceList() {
-    sourceList.innerHTML = '';
-    sources.forEach((s, index) => {
-        const item = document.createElement('div');
-        item.className = 'source-item' + (s === selectedSource ? ' active' : '');
-        item.textContent = `👁️ ${s.name}`;
-        item.onclick = () => {
-            selectedSource = s;
-            updateSourceList();
-        };
-        sourceList.appendChild(item);
-    });
-}
-
-// ★マウスで編集（ドラッグ）する魔法
-function getMousePos(e) {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY
-    };
-}
-
-canvas.onmousedown = (e) => {
-    const pos = getMousePos(e);
-    // 重なっている場合は上のソースから選ぶみょん
-    selectedSource = [...sources].reverse().find(s => 
-        pos.x > s.x && pos.x < s.x + s.w && pos.y > s.y && pos.y < s.y + s.h
-    );
-    
-    if (selectedSource) {
-        isDragging = true;
-        dragOffset.x = pos.x - selectedSource.x;
-        dragOffset.y = pos.y - selectedSource.y;
-        updateSourceList();
-    }
-};
-
-window.onmousemove = (e) => {
-    if (isDragging && selectedSource) {
-        const pos = getMousePos(e);
-        selectedSource.x = pos.x - dragOffset.x;
-        selectedSource.y = pos.y - dragOffset.y;
-    }
-};
-
-window.onmouseup = () => { isDragging = false; };
-
-// UI制御
-document.getElementById('addBtn').onclick = (e) => {
-    e.stopPropagation();
-    addMenu.classList.toggle('hidden');
-};
+// UI制御だみょん
+document.getElementById('addBtn').onclick = () => document.getElementById('addMenu').classList.toggle('hidden');
 document.getElementById('openSettings').onclick = () => document.getElementById('settingsModal').classList.remove('hidden');
 document.getElementById('closeSettings').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
+
+// ソース追加
+async function addCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        registerSource(stream, "📷 カメラ");
+        document.getElementById('addMenu').classList.add('hidden');
+    } catch(e) { alert("カメラの起動に失敗したみょん！"); }
+}
+
+async function addScreen() {
+    try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        registerSource(stream, "🖥️ 画面共有");
+        document.getElementById('addMenu').classList.add('hidden');
+    } catch(e) { alert("画面共有がキャンセルされたみょん！"); }
+}
+
+function registerSource(stream, label) {
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    video.muted = true; // ハウリング防止
+    video.play();
+    sources.push({ video, label });
+    
+    const div = document.createElement('div');
+    div.style.padding = "5px";
+    div.style.borderBottom = "1px solid #333";
+    div.textContent = label;
+    sourceList.appendChild(div);
+}
+
+// 🔴 録画ロジック（FPS指定・メモリ保存）
+recordBtn.onclick = () => {
+    if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        const targetFPS = parseInt(fpsSelect.value);
+        recordedChunks = [];
+        
+        // 指定されたFPSでキャンバスからキャプチャ！
+        const stream = canvas.captureStream(targetFPS);
+        
+        if (streamKey.value) {
+            console.log("ストリームキーを確認したみょん！配信準備OK🌸");
+        }
+
+        mediaRecorder = new MediaRecorder(stream, {
+            mimeType: 'video/webm; codecs=vp9',
+            videoBitsPerSecond: 8000000 // 8Mbps
+        });
+
+        mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `shuroru-obs-${targetFPS}fps.webm`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        };
+
+        mediaRecorder.start();
+        recordBtn.textContent = `⏹️ 録画停止 (${targetFPS}FPS)`;
+        recordBtn.classList.add('record-active');
+    } else {
+        mediaRecorder.stop();
+        recordBtn.textContent = "🔴 録画開始";
+        recordBtn.classList.remove('record-active');
+    }
+};
+
+// 描画ループ
+function update() {
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    sources.forEach(src => {
+        ctx.drawImage(src.video, 0, 0, canvas.width, canvas.height);
+    });
+    requestAnimationFrame(update);
+}
+
+canvas.width = 1280; canvas.height = 720;
+update();

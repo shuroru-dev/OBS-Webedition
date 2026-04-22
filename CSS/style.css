@@ -1,35 +1,30 @@
-body, html { margin: 0; padding: 0; height: 100%; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
-
+body { background: #121212; color: #e0e0e0; font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; overflow: hidden; }
 #obs-container { display: flex; flex-direction: column; height: 100vh; }
 
-/* 映像：奥に配置 */
-.video-layer { flex: 1; display: flex; justify-content: center; align-items: center; background: #0a0a0a; min-height: 0; }
-#mainCanvas { max-width: 95%; max-height: 95%; aspect-ratio: 16/9; background: #000; border: 2px solid #333; }
+.video-layer { flex: 1; display: flex; justify-content: center; align-items: center; background: #000; padding: 20px; }
+#mainCanvas { width: 100%; max-width: 1280px; aspect-ratio: 16/9; background: #050505; border: 1px solid #333; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
 
-/* UI：手前に配置してボタンを見えるようにする！ */
-.ui-layer { height: 200px; background: #1c1c1c; border-top: 3px solid #333; display: flex; padding: 10px; gap: 10px; position: relative; z-index: 100; }
+.ui-layer { height: 220px; background: #1e1e1e; border-top: 1px solid #333; display: flex; padding: 15px; gap: 15px; }
+.panel { flex: 1; border: 1px solid #333; background: #252525; border-radius: 4px; display: flex; flex-direction: column; }
+.header { background: #333; padding: 6px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #aaa; }
+.list-container { flex: 1; padding: 10px; font-size: 13px; color: #fff; }
 
-.panel { flex: 1; background: #252525; border: 1px solid #444; display: flex; flex-direction: column; }
-.header { background: #333; font-size: 11px; text-align: center; padding: 4px; color: #aaa; }
-.list-container { flex: 1; background: #000; margin: 5px; overflow-y: auto; }
-.controls { padding: 5px; position: relative; }
+.controls { padding: 10px; position: relative; }
+.main-btn { width: 100%; background: #3a3a3a; color: white; border: 1px solid #555; padding: 8px; border-radius: 4px; cursor: pointer; }
+.main-btn:hover { background: #4a4a4a; }
 
-.main-btn { width: 30px; height: 30px; background: #444; color: #fff; border: none; cursor: pointer; }
-.popup-menu { position: absolute; bottom: 40px; left: 5px; background: #333; border: 1px solid #555; display: flex; flex-direction: column; z-index: 200; }
-.popup-menu button { padding: 10px; background: #444; border: none; color: #fff; text-align: left; border-bottom: 1px solid #555; }
+.popup-menu { position: absolute; bottom: 50px; left: 10px; background: #2d2d2d; border: 1px solid #444; border-radius: 4px; display: flex; flex-direction: column; min-width: 150px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+.popup-menu button { background: none; color: white; border: none; padding: 12px; text-align: left; cursor: pointer; }
+.popup-menu button:hover { background: #3d3d3d; }
+
+.btn-grid { padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+button { padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.record-btn { grid-column: span 2; background: #d32f2f; color: white; font-weight: bold; font-size: 15px; }
+.record-active { background: #388e3c !important; }
 
 .hidden { display: none !important; }
-.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 300; display: flex; align-items: center; justify-content: center; }
-.modal-box { background: #252525; border: 1px solid #4a90e2; width: 280px; }
-.modal-top { background: #333; padding: 5px 10px; display: flex; justify-content: space-between; }
-/* ソースリストのアイテム用 */
-.source-item {
-    padding: 8px;
-    margin: 2px;
-    background: #333;
-    cursor: pointer;
-    font-size: 13px;
-    border-radius: 3px;
-}
-.source-item:hover { background: #444; }
-.source-item.active { background: #4a90e2; border-left: 4px solid #fff; }
+
+.modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 999; }
+.modal-box { background: #252525; padding: 25px; border-radius: 8px; width: 350px; border: 1px solid #444; }
+.setting-item { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
+.setting-item input, .setting-item select { padding: 8px; background: #1a1a1a; color: white; border: 1px solid #444; border-radius: 4px; }

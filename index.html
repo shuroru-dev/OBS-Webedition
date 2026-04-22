@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Web-OBS Pro | Shuroru Edition</title>
-    <link rel="stylesheet" href="CSS/style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="obs-container">
@@ -16,11 +16,10 @@
                 <div class="header">ソース</div>
                 <div id="sourceList" class="list-container"></div>
                 <div class="controls">
-                    <button id="addBtn" class="main-btn">+</button>
+                    <button id="addBtn" class="main-btn">＋ ソースを追加</button>
                     <div id="addMenu" class="popup-menu hidden">
                         <button onclick="addScreen()">🖥️ 画面共有</button>
                         <button onclick="addCamera()">📷 カメラ</button>
-                        <button onclick="askMic()">🎤 マイクを許可する</button>
                     </div>
                 </div>
             </div>
@@ -28,6 +27,7 @@
             <div class="panel">
                 <div class="header">コントロール</div>
                 <div class="btn-grid">
+                    <button id="recordBtn" class="record-btn">🔴 録画開始</button>
                     <button id="openSettings">設定</button>
                     <button onclick="location.reload()">再起動</button>
                 </div>
@@ -38,15 +38,26 @@
     <div id="settingsModal" class="modal hidden">
         <div class="modal-box">
             <div class="modal-top">
-                <span>配信設定</span>
+                <span>詳細設定</span>
                 <button id="closeSettings">×</button>
             </div>
             <div class="modal-body">
-                <p>URL: webobs.pages.dev</p>
-                <p>Status: HTTPS Active 🔒</p>
+                <div class="setting-item">
+                    <label>🔑 ストリームキー:</label>
+                    <input type="password" id="streamKey" placeholder="キーを入力...">
+                </div>
+                <div class="setting-item">
+                    <label>🎞️ 配信/録画 FPS:</label>
+                    <select id="fpsSelect">
+                        <option value="30">30 FPS</option>
+                        <option value="60" selected>60 FPS</option>
+                        <option value="120">120 FPS</option>
+                    </select>
+                </div>
+                <p style="color:#888; font-size:11px; margin-top:10px;">※メモリに録画し、終了後に保存されます🌸</p>
             </div>
         </div>
     </div>
-    <script src="Javascript/script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
