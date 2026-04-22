@@ -2,7 +2,8 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Web-OBS Pro | Shuroru Final</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web-OBS Pro | Shuroru Final Edition</title>
     <link rel="stylesheet" href="./CSS/style.css">
 </head>
 <body>
@@ -19,8 +20,8 @@
                     <button id="addBtn">＋</button>
                     <div id="addMenu" class="popup-menu hidden">
                         <button onclick="addScreen()">🖥️ 画面共有</button>
-                        <button onclick="addCamera()">📷 カメラ</button>
-                        <button onclick="addMic()">🎤 マイク</button>
+                        <button onclick="addCamera()">📷 カメラデバイス</button>
+                        <button onclick="addMic()">🎤 マイク入力</button>
                     </div>
                 </div>
             </div>
@@ -30,7 +31,15 @@
                 <div class="list-content">
                     <div class="mixer-item">
                         <span class="mixer-label">マイク / 補助音声</span>
-                        <div class="meter-bg"><div id="micMeter" class="meter-fill"></div></div>
+                        <div class="meter-bg">
+                            <div id="micMeter" class="meter-fill"></div>
+                        </div>
+                    </div>
+                    <div class="mixer-item">
+                        <span class="mixer-label">デスクトップ音声</span>
+                        <div class="meter-bg">
+                            <div class="meter-fill" style="width: 5%; opacity: 0.5;"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -50,34 +59,66 @@
     <div id="settingsModal" class="modal hidden">
         <div class="modal-box">
             <div class="modal-sidebar">
-                <div class="tab-btn active" onclick="showTab('video')">🖼️ 映像</div>
-                <div class="tab-btn" onclick="showTab('stream')">📡 配信</div>
+                <div class="tab-btn active" id="tabBtn-stream" onclick="showTab('stream')">📡 配信</div>
+                <div class="tab-btn" id="tabBtn-output" onclick="showTab('output')">📤 出力</div>
+                <div class="tab-btn" id="tabBtn-video" onclick="showTab('video')">🖼️ 映像</div>
             </div>
+            
             <div class="modal-main">
-                <div class="modal-top"><span id="tabTitle">設定 - 映像</span><button id="closeSettings">×</button></div>
-                
-                <div id="tab-video" class="tab-content">
+                <div class="modal-top">
+                    <span id="tabTitle">設定 - 配信</span>
+                    <button id="closeSettings">×</button>
+                </div>
+
+                <div id="tab-stream" class="tab-content">
                     <div class="input-group">
-                        <label>基本解像度</label>
-                        <select id="resSelect">
-                            <option value="landscape">1920x1080 (横)</option>
-                            <option value="portrait">1080x1920 (縦✨)</option>
-                        </select>
+                        <label>配信サーバー (URL)</label>
+                        <input type="text" id="streamUrl" placeholder="rtmp://a.rtmp.youtube.com/live2" value="rtmp://a.rtmp.youtube.com/live2">
                     </div>
                     <div class="input-group">
-                        <label>FPS</label>
-                        <select id="fpsSelect"><option value="60">60</option><option value="30">30</option></select>
+                        <label>ストリームキー</label>
+                        <input type="password" id="streamKey" placeholder="キーを入力してください...">
                     </div>
                 </div>
 
-                <div id="tab-stream" class="tab-content hidden">
-                    <div class="input-group"><label>ストリームキー</label><input type="password" id="streamKey" placeholder="キーを入力..."></div>
+                <div id="tab-output" class="tab-content hidden">
+                    <div class="input-group">
+                        <label>映像エンコーダ</label>
+                        <select id="encoderSelect">
+                            <option value="h264">ソフトウェア (H.264 / AVC1)</option>
+                            <option value="vp9">高効率 (VP9 / WebM)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>ビットレート (Kbps)</label>
+                        <input type="number" id="bitrateInput" value="12000">
+                    </div>
                 </div>
-                
-                <div class="modal-footer"><button id="saveSettings" class="apply-btn">適用</button></div>
+
+                <div id="tab-video" class="tab-content hidden">
+                    <div class="input-group">
+                        <label>基本 (キャンパス) 解像度</label>
+                        <select id="resSelect">
+                            <option value="landscape">1920x1080 (横画面)</option>
+                            <option value="portrait">1080x1920 (縦画面✨)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>FPS 共通値</label>
+                        <select id="fpsSelect">
+                            <option value="60">60</option>
+                            <option value="30">30</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button id="saveSettings" class="apply-btn">適用</button>
+                </div>
             </div>
         </div>
     </div>
+
     <script src="./Javascript/script.js"></script>
 </body>
 </html>
