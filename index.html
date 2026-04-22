@@ -2,52 +2,76 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Web-OBS Pro - Shuroru Edition</title>
-    <link rel="stylesheet" href="./CSS/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web-OBS Pro | Shuroru Edition</title>
+    <link rel="stylesheet" href="CSS/style.css">
 </head>
 <body>
-    <div id="obs-layout">
-        <div class="canvas-area">
-            <canvas id="obsCanvas" width="1280" height="720"></canvas>
-            <div id="canvas-overlay"></div>
-        </div>
+    <div id="obs-studio">
+        <section class="viewport">
+            <canvas id="mainCanvas"></canvas>
+        </section>
 
-        <div class="dock-container">
-            <div class="dock-item" id="dock-sources">
-                <h3>ソース</h3>
-                <div class="list-box" id="sourceList"></div>
-                <div class="dock-controls">
-                    <button id="addScreen">+</button>
-                    <button id="addImage">🖼️</button>
-                    <button id="clearSources">🗑️</button>
+        <footer class="dock">
+            <div class="dock-panel" id="source-panel">
+                <div class="panel-header">ソース</div>
+                <div id="sourceList" class="list-box"></div>
+                <div class="panel-buttons">
+                    <button id="addBtn" title="ソースを追加">+</button>
+                    <button id="delBtn" title="ソースを削除">-</button>
+                    
+                    <div id="addMenu" class="hidden">
+                        <button onclick="addScreen()">🖥️ 画面キャプチャ</button>
+                        <button onclick="addCamera()">📷 映像キャプチャデバイス</button>
+                        <button onclick="alert('マイクも許可が必要だみょん！')">🎤 音声入力キャプチャ</button>
+                    </div>
                 </div>
             </div>
 
-            <div class="dock-item" id="dock-mixer">
-                <h3>音声ミキサー</h3>
-                <div class="mixer-unit">
-                    <span class="label">Desktop Audio</span>
-                    <div class="volume-meter"><div class="meter-fill"></div></div>
+            <div class="dock-panel">
+                <div class="panel-header">音声ミキサー</div>
+                <div class="list-box">
+                    <div style="padding: 10px; font-size: 10px; color: #888;">
+                        Desktop Audio [||||||||||----]
+                    </div>
                 </div>
             </div>
 
-            <div class="dock-item" id="dock-controls">
-                <h3>コントロール</h3>
-                <button class="btn-main" id="startStream">配信開始</button>
-                <button class="btn-main" id="startRecord">録画開始</button>
-                <button class="btn-main" id="toggleSettings">設定</button>
+            <div class="dock-panel">
+                <div class="panel-header">コントロール</div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 4px; padding: 5px;">
+                    <button style="background: #333;">配信開始</button>
+                    <button style="background: #333;">録画開始</button>
+                    <button id="openSettings">設定</button>
+                    <button onclick="location.reload()">再起動</button>
+                </div>
             </div>
-        </div>
+        </footer>
 
-        <div id="settingsPanel" class="hidden">
-            <div class="settings-content">
-                <h2>配信設定</h2>
-                <label>ストリームURL:</label> <input type="text" id="rtmpUrl" placeholder="rtmp://...">
-                <label>ストリームキー:</label> <input type="password" id="streamKey">
-                <button id="saveSettings">適用</button>
+        <div id="settingsModal" class="modal hidden">
+            <div class="modal-window">
+                <div class="modal-header">
+                    <span>設定</span>
+                    <button id="closeSettings" class="close-btn">×</button>
+                </div>
+                <div style="padding: 20px; font-size: 12px;">
+                    <div style="margin-bottom: 15px;">
+                        <label>基本解像度:</label><br>
+                        <select style="width: 100%; background: #000; color: #fff; border: 1px solid #555;">
+                            <option>1280x720</option>
+                            <option>1920x1080</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label>サーバー:</label><br>
+                        <input type="text" value="webobs.pages.dev" readonly style="width: 90%; background: #000; color: #888; border: 1px solid #555; padding: 4px;">
+                    </div>
+                    <p style="color: #4a90e2; text-align: center;">しゅろるプロ専用ビルド🌸</p>
+                </div>
             </div>
         </div>
     </div>
-    <script src="./Javascript/script.js"></script>
+
+    <script src="Javascript/script.js"></script>
 </body>
 </html>
