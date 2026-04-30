@@ -9,11 +9,15 @@ const micMeter = document.getElementById('micMeter');
 let sources = [];
 let mediaRecorder;
 let recordedChunks = [];
+
+// 音声合成用のノード
 let audioCtx;
-let analyser;
+let mainAudioDestination; // すべての音をここに集めるみょん！
+let micStreamNode;
+let screenAudioNode;
 
 /**
- * 1. 映像設定（縦・横・解像度）の反映
+ * 1. キャンバスサイズの更新
  */
 function updateCanvasSize() {
     if (resSelect.value === 'portrait') {
@@ -27,63 +31,69 @@ function updateCanvasSize() {
 resSelect.onchange = updateCanvasSize;
 
 /**
- * 2. 設定モーダルの制御
+ * 2. 音声コンテキストの初期化
+ * ユーザーが操作した後に呼び出す必要があるみょん
  */
-window.showTab = (name) => {
-    // タブコンテンツの切り替え
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-    document.getElementById(`tab-${name}`).classList.remove('hidden');
-    
-    // サイドバーの見た目切り替え
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`tabBtn-${name}`).classList.add('active');
-    
-    // タイトルの更新
-    const titleMap = { stream: '配信', output: '出力', video: '映像' };
-    document.getElementById('tabTitle').textContent = `設定 - ${titleMap[name]}`;
-};
-
-document.getElementById('addBtn').onclick = () => document.getElementById('addMenu').classList.toggle('hidden');
-document.getElementById('openSettings').onclick = () => document.getElementById('settingsModal').classList.remove('hidden');
-document.getElementById('closeSettings').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
-document.getElementById('saveSettings').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
+function initAudioContext() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        mainAudioDestination = audioCtx.createMediaStreamDestination();
+    }
+}
 
 /**
- * 3. 各種ソース（カメラ・画面・マイク）の追加
+ * 3. 各種ソースの追加
  */
 async function addMic() {
+    initAudioContext();
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        analyser = audioCtx.createAnalyser();
+        
+        // メーター用
+        const analyser = audioCtx.createAnalyser();
         const source = audioCtx.createMediaStreamSource(stream);
         source.connect(analyser);
         
+        // 録画用にミックス！
+        source.connect(mainAudioDestination);
+
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
         function updateMeter() {
             analyser.getByteFrequencyData(dataArray);
             let avg = dataArray.reduce((a, b) => a + b) / dataArray.length;
-            micMeter.style.width = Math.min(avg * 2.5, 100) + "%"; // 感度調整
+            micMeter.style.width = Math.min(avg * 2.5, 100) + "%";
             requestAnimationFrame(updateMeter);
         }
         updateMeter();
         
-        const div = document.createElement('div');
-        div.className = "source-item";
-        div.textContent = "🎤 マイク入力";
-        sourceList.appendChild(div);
-    } catch (e) { alert("マイクの起動に失敗したみょん！"); }
-    document.getElementById('addMenu').classList.add('hidden');
+        addSourceToList("🎤 マイク入力");
+    } catch (e) { alert("マイクが使えないみたいだみょん！"); }
 }
 
 async function addCamera() {
-    const s = await navigator.mediaDevices.getUserMedia({ video: true });
-    registerSource(s, "📷 映像キャプチャデバイス");
+    try {
+        const s = await navigator.mediaDevices.getUserMedia({ video: true });
+        registerSource(s, "📷 映像キャプチャデバイス");
+    } catch (e) { alert("カメラが見つからないみょん！"); }
 }
 
 async function addScreen() {
-    const s = await navigator.mediaDevices.getDisplayMedia({ video: true });
-    registerSource(s, "🖥️ 画面キャプチャ");
+    initAudioContext();
+    try {
+        // 画面共有時に「システムオーディオも共有」にチェックを入れてね！
+        const s = await navigator.mediaDevices.getDisplayMedia({ 
+            video: true, 
+            audio: true 
+        });
+
+        // 画面の音がある場合、ミックスに追加するみょん
+        if (s.getAudioTracks().length > 0) {
+            const screenAudioSource = audioCtx.createMediaStreamSource(s);
+            screenAudioSource.connect(mainAudioDestination);
+        }
+
+        registerSource(s, "🖥️ 画面キャプチャ");
+    } catch (e) { alert("画面共有がキャンセルされたみょん！"); }
 }
 
 function registerSource(stream, label) {
@@ -91,7 +101,10 @@ function registerSource(stream, label) {
     video.srcObject = stream;
     video.play();
     sources.push({ video, label });
-    
+    addSourceToList(label);
+}
+
+function addSourceToList(label) {
     const div = document.createElement('div');
     div.className = "source-item";
     div.textContent = label;
@@ -100,36 +113,28 @@ function registerSource(stream, label) {
 }
 
 /**
- * 4. 配信・録画ロジック（H.264 & サーバーURL対応）
+ * 4. 録画ロジック
  */
-streamBtn.onclick = () => {
-    const url = document.getElementById('streamUrl').value;
-    const key = document.getElementById('streamKey').value;
-
-    if (streamBtn.textContent === "配信開始") {
-        if (!key) { alert("ストリームキーを入れてほしいみょん！🔑"); return; }
-        
-        console.log(`接続先: ${url}/${key}`);
-        streamBtn.textContent = "配信停止";
-        streamBtn.classList.add('btn-active');
-        // ※ 実際はここにWebRTC -> RTMP変換サーバーへの接続処理を書くみょん！
-    } else {
-        streamBtn.textContent = "配信開始";
-        streamBtn.classList.remove('btn-active');
-    }
-};
-
 recordBtn.onclick = () => {
     if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        initAudioContext();
+        
         const fps = parseInt(document.getElementById('fpsSelect').value);
         const bps = parseInt(document.getElementById('bitrateInput').value) * 1000;
-        const encoder = document.getElementById('encoderSelect').value;
         
-        // H.264 (avc1) を優先的に試行するみょん！
-        const mimeType = encoder === 'h264' ? 'video/webm; codecs=avc1.4d401e' : 'video/webm; codecs=vp9';
+        // キャンバスの映像を取得
+        const videoStream = canvas.captureStream(fps);
+        
+        // 映像ストリームに、ミックスした音声ストリームを合体させるみょん！
+        const combinedStream = new MediaStream([
+            ...videoStream.getVideoTracks(),
+            ...mainAudioDestination.stream.getAudioTracks()
+        ]);
+
+        const mimeType = 'video/webm; codecs=vp9';
         const actualType = MediaRecorder.isTypeSupported(mimeType) ? mimeType : 'video/webm';
 
-        mediaRecorder = new MediaRecorder(canvas.captureStream(fps), {
+        mediaRecorder = new MediaRecorder(combinedStream, {
             mimeType: actualType,
             videoBitsPerSecond: bps
         });
@@ -137,9 +142,10 @@ recordBtn.onclick = () => {
         mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
         mediaRecorder.onstop = () => {
             const blob = new Blob(recordedChunks, { type: actualType });
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `shuroru_stream_${resSelect.value}.webm`;
+            a.href = url;
+            a.download = `shuroru_rec_${Date.now()}.webm`;
             a.click();
         };
 
@@ -162,12 +168,26 @@ function render() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     sources.forEach(src => {
+        // 全画面に広げて描画（必要に応じて調整してね）
         ctx.drawImage(src.video, 0, 0, canvas.width, canvas.height);
     });
     
     requestAnimationFrame(render);
 }
 
-// 初期化
+// モーダル制御などのイベント
+document.getElementById('addBtn').onclick = () => document.getElementById('addMenu').classList.toggle('hidden');
+document.getElementById('openSettings').onclick = () => document.getElementById('settingsModal').classList.remove('hidden');
+document.getElementById('closeSettings').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
+document.getElementById('saveSettings').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
+
+window.showTab = (name) => {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    document.getElementById(`tab-${name}`).classList.remove('hidden');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`tabBtn-${name}`).classList.add('active');
+};
+
+// 実行！
 updateCanvasSize();
 render();
